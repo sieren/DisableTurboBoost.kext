@@ -3,6 +3,8 @@ Turbo Boost Disabler for Mac OS X
 
 This kernel extension `DisableTurboBoost.kext` lets you disable [Intel Turbo Boost Technology](http://www.intel.com/content/www/us/en/architecture-and-technology/turbo-boost/turbo-boost-technology.html) present on latest Intel Core processors running *Mac OS X*.
 
+This particular fork makes sure that the disabled TurboBoost state remains after the device returns from standby mode.
+
 Abstract
 --------
 
