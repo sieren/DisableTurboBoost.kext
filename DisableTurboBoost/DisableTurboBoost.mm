@@ -25,7 +25,7 @@ extern void mp_rendezvous_no_intrs(
 
 const uint64_t expectedFeatures  = 0x850089LL;
 const uint64_t disableTurboBoost = 0x4000000000LL;
-
+    static uint8_t sleepState = 0;
 
 static void disable_tb(__unused void * param_not_used) {
 	wrmsr64(MSR_IA32_MISC_ENABLE, rdmsr64(MSR_IA32_MISC_ENABLE) | disableTurboBoost);
@@ -41,12 +41,14 @@ IOReturn mySleepHandler( void * target, void * refCon,
     {
         // IOLog("Got sleep/wake notice.  Message type was %d\n", messageType);
 #if ALLOW_SLEEP
+        if (sleepState == 1) {
         acknowledgeSleepWakeNotification(refCon);
         
         // Just sending out the kernel start routine again.
         uint64_t prev = rdmsr64(MSR_IA32_MISC_ENABLE);
         mp_rendezvous_no_intrs(disable_tb, NULL);
         printf("Disabled Turbo Boost: %llx -> %llx\n", prev, rdmsr64(MSR_IA32_MISC_ENABLE));
+        }
 #else
         vetoSleepWakeNotification(refCon);
 #endif
@@ -67,7 +69,7 @@ kern_return_t DisableTurboBoost_start(kmod_info_t * ki, void *d)
     
     // Register to sleep notifier
     notifier = registerPrioritySleepWakeInterest(&mySleepHandler, myself, NULL);
-    
+    sleepState = 1;
 	return KERN_SUCCESS;
 }
 
@@ -81,6 +83,7 @@ kern_return_t DisableTurboBoost_stop(kmod_info_t *ki, void *d)
     // remove itself or else we might get a kernel panic
     notifier->remove();
 	printf("Re-enabled Turbo Boost: %llx -> %llx\n", prev, rdmsr64(MSR_IA32_MISC_ENABLE));
+    sleepState = 0;
     return KERN_SUCCESS;
 }
     
