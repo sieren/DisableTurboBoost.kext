@@ -4,7 +4,10 @@ KEXT := /tmp/$(NAME).kext
 DIR  := Contents/MacOS
 BIN  := $(DIR)/$(NAME)
 INFO := Contents/Info.plist
-
+FRAMEWORKS:= -framework Foundation -framework IOKit
+LIBRARIES:= -lobjc
+LDFLAGS :=$(LIBRARIES) $(FRAMEWORKS)
+CC = g++
 # detect current kernel architecture
 CPU  := $(shell uname -m)
 ifeq ($(CPU),i386)
@@ -15,8 +18,8 @@ CPPFLAGS += -m64
 endif
 endif
 
-$(BIN): $(DIR) $(NAME).c Makefile
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(MARCH) -Xlinker -kext -static $(NAME).c -o $@ -fno-builtin -nostdlib -lkmod -r -mlong-branch -I/System/Library/Frameworks/Kernel.framework/Headers -Wall
+$(BIN): $(DIR) $(NAME).cpp Makefile
+	$(CC) $(CFLAGS) $(LDFLAGS) $(CPPFLAGS) $(MARCH) -Xlinker -kext -static $(NAME).cpp -o $@ -fno-builtin -nostdlib -lkmod -r -I/System/Library/Frameworks/Kernel.framework/Headers -Wall
 
 $(DIR):; mkdir -p $(DIR)
 
